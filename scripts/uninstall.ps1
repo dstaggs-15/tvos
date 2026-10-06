@@ -1,4 +1,1 @@
-$startup=[Environment]::GetFolderPath("Startup")
-Remove-Item "$startup\TVOS.lnk" -Force -ErrorAction SilentlyContinue
-Stop-Process -Name TVOS -Force -ErrorAction SilentlyContinue
-Write-Host "Startup entry removed. C:\TV was kept so settings are not lost."
+$ErrorActionPreference="SilentlyContinue";Stop-Process -Name BGFTOS -Force;$u=(Get-CimInstance Win32_ComputerSystem).UserName;if($u){$sid=(New-Object Security.Principal.NTAccount($u)).Translate([Security.Principal.SecurityIdentifier]).Value;$p=(Get-CimInstance Win32_UserProfile|Where-Object SID -eq $sid|Select-Object -First 1).LocalPath;Remove-Item(Join-Path $p "AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\BGFTOS.lnk") -Force};Get-NetFirewallRule -DisplayName "BGFTOS Phone Remote"|Remove-NetFirewallRule;Write-Host "Startup and firewall entries removed. C:\TV was kept so configuration is not lost."

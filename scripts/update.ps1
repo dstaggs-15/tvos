@@ -1,6 +1,1 @@
-param([string]$PublishPath="$PSScriptRoot\..\publish")
-Stop-Process -Name TVOS -Force -ErrorAction SilentlyContinue
-Copy-Item "$PublishPath\*" "C:\TV\app" -Recurse -Force
-Copy-Item "$PSScriptRoot\..\web\*" "C:\TV\web" -Recurse -Force
-Copy-Item "$PSScriptRoot\..\assets\*" "C:\TV\assets" -Recurse -Force
-Start-Process "C:\TV\app\TVOS.exe"
+$ErrorActionPreference="Stop";$p=(Resolve-Path(Join-Path $PSScriptRoot "..")).Path;if(-not(Test-Path "$p\app\BGFTOS.exe")){throw "Incomplete BGFTOS package."};Stop-Process -Name BGFTOS -Force -ErrorAction SilentlyContinue;Copy-Item "$p\app\*" "C:\TV\app" -Recurse -Force;Copy-Item "$p\web\*" "C:\TV\web" -Recurse -Force;Copy-Item "$p\assets\*" "C:\TV\assets" -Recurse -Force;Copy-Item "$p\config\*.default.json" "C:\TV\config" -Force;Start-Process "C:\TV\app\BGFTOS.exe"
