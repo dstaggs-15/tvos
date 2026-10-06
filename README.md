@@ -2,7 +2,7 @@
 
 BGFT OS turns a Windows mini PC into a living-room streaming appliance. The TV can stay offline; the PC handles streaming and presents a purpose-built interface instead of a Windows desktop.
 
-The original target is an HP Pro Mini 400 G9 running Windows 11 Pro with a dedicated standard `TV` account and a separate administrator account.
+The original target is an Mini PC running Windows 11 with a dedicated standard `TV` account and a separate administrator account.
 
 ## What normal use looks like
 
