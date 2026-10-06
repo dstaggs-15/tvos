@@ -1,85 +1,91 @@
-# TVOS
+# BGFT OS
 
-TVOS turns a small Windows PC into a simple living-room streaming box. The goal is simple: turn on the TV, see Home, pick a service, and watch. Nobody using it should need to know Windows is underneath.
+BGFT OS turns a Windows mini PC into a living-room streaming appliance. The TV can stay offline; the PC handles streaming and presents a purpose-built interface instead of a Windows desktop.
 
-The original machine is an HP Pro Mini 400 G9 (Core i5-13500T, 16 GB RAM, Intel UHD 770) running Windows 11 Pro. The Onn/Vizio television is intended to stay offline; the PC handles internet streaming.
+The original target is an HP Pro Mini 400 G9 running Windows 11 Pro with a dedicated standard `TV` account and a separate administrator account.
 
-## Daily use
+## What normal use looks like
 
-The finished path is: **PC boots or wakes → Windows signs into the dedicated TV account → TVOS opens full-screen → choose a service → Chrome opens it full-screen → Home returns to TVOS.**
+Power on or wake the PC. Windows signs into the TV account. BGFT OS starts automatically and fills the screen. Pick Fubo, Netflix, Disney+, Prime Video, YouTube or Tubi. The service opens in a dedicated Chrome profile in native full-screen. Press Home and the streaming window closes and BGFT OS returns.
 
-TV volume and mute stay on the television. PC audio should remain at 100%.
+Nobody watching TV should need Command Prompt, PowerShell, the Windows desktop, a browser toolbar or a keyboard.
 
-TVOS currently targets Fubo, Netflix, Disney+, Prime Video, YouTube and Tubi, with custom services supported through configuration and the phone remote.
+## Production interface
 
-## What is included
+The Home screen is branded **BGFT OS** and uses a layered blue/violet living-room UI rather than a plain desktop-style grid. It includes a persistent BGFT OS mark, clock/date, large service cards, focus animation, seasonal color themes and a system panel.
 
-- Full-screen WebView2 Home screen.
-- Chrome app-mode streaming using the existing dedicated `Profile 1` profile.
-- Global Home key that closes visible Chrome streaming windows and restores Home.
-- Recovery when the visible Chrome window disappears.
-- Local-network phone remote with D-pad, OK, Home, Back, Play/Pause, text entry, direct service launch and Sleep.
-- Phone-side service manager for adding/removing services without a keyboard on the TV PC.
-- Automatic artwork discovery/cache foundation plus built-in fallback artwork.
-- Default, Halloween, Thanksgiving and Christmas themes. Auto mode uses Halloween in October, Thanksgiving in November and Christmas in December.
-- Startup installer, updater and uninstaller.
-- GitHub Actions self-contained Windows x64 build.
-- No TVOS analytics, advertising, cloud account or telemetry.
+Built-in service artwork is stored locally so Home does not need to contact a logo service. Custom services can attempt to discover and cache artwork from the service's own Open Graph image, Apple touch icon or favicon.
 
-## Repository layout
+## Architecture
 
 ```
-src/TVOS/                 C# WinForms/WebView2 application
-web/launcher/             Interface shown on the television
-web/remote/               Local phone remote and app manager
-config/                    Default service/settings files
-assets/services/           Built-in service artwork
-assets/themes/             Theme artwork
-scripts/                   Install/update/uninstall scripts
-.github/workflows/         Windows build workflow
+Windows 11 TV account
+        |
+        +-- BGFT OS (WinForms)
+              |
+              +-- WebView2 Home UI
+              +-- local phone-remote server
+              +-- service/settings manager
+              +-- artwork cache
+              +-- power/input control
+              |
+              +-- Chrome dedicated TV profile
+                    +-- Fubo / Netflix / Disney+ / Prime / YouTube / Tubi
 ```
 
-Installed files live under `C:\TV`: `app`, `web`, `assets`, `config`, `cache\artwork`, and `logs`. Updates are designed not to overwrite the user's live `services.json` or `settings.json`.
+Home and Chrome are deliberately separate. A streaming website cannot replace or destroy Home. If the visible Chrome streaming window disappears, BGFT OS brings Home back.
 
-## Why Chrome and WebView2 are separate
+## Repository
 
-TVOS Home is its own WebView2 application. Streaming websites open in Chrome with `--app`, `--start-fullscreen` and `--hide-scrollbars`. This keeps browser controls out of sight while preserving Chrome's DRM/cookie behavior. If Chrome closes or crashes, Home can recover independently.
+```
+src/TVOS/                 C# application
+web/launcher/             television UI
+web/remote/               phone remote and app manager
+assets/brand/             BGFT OS identity
+assets/services/          local service artwork
+assets/themes/            seasonal theme assets
+config/                    default service/settings data
+scripts/                   install/update/uninstall
+.github/workflows/         production Windows build
+```
 
-TVOS does not store streaming passwords. Logins remain in the dedicated Chrome profile.
+Installed runtime data lives under `C:\TV`. Live configuration is kept separate from application files so updates do not intentionally overwrite the user's service list or settings.
 
 ## Controls
 
-During development, Arrow keys move, Enter selects, and the physical keyboard Home key is registered globally. Home works even while Chrome has focus.
+Keyboard controls remain available for development and generic HID remotes: arrows navigate, Enter selects and Home is registered globally. Home works while Chrome has focus.
 
-The planned physical remote is a BOXPUT BPR1S Plus with its 2.4 GHz USB receiver. Its exact HID codes are deliberately not guessed. Once the actual remote is available, its buttons will be measured and mapped onto the actions TVOS already provides. TV power/volume/mute can remain IR/TV-side.
+The intended physical remote is the BOXPUT BPR1S Plus using its 2.4 GHz USB receiver. Exact button codes are not guessed in source. The actual receiver will be measured later and its HID events mapped onto the already-existing Home, Back, directional, OK, media and sleep actions.
+
+TV volume and mute stay on the TV side. The PC is intended to remain at full volume.
 
 ## Phone remote
 
-TVOS runs a small local HTTP server on port 8765 by default. Open the phone-remote address shown from the Home settings button while the phone is on the same LAN.
+BGFT OS runs a small local HTTP server. The System panel shows the phone URL. The phone remote provides service shortcuts, D-pad, OK, Home, Back, Play/Pause, text entry, Sleep and app management.
 
-A random token is generated on first run and required by control endpoints. This is intended for a trusted home LAN. The final PC should still be placed on a TV/IoT VLAN with firewall rules allowing the owner's phone to reach the TVOS port without giving the TV PC broad access to sensitive LAN devices.
+A random control token is generated on first run. API requests require it. The remote is local-network only; BGFT OS has no cloud remote service.
 
-The phone remote can also type text into the active streaming page and add/remove streaming services.
+For the final network layout, the TV PC should live on a TV/IoT VLAN with firewall rules that let the owner's phone reach the remote port without giving the TV PC broad access to trusted devices.
 
-## Services and artwork
+## Adding apps
 
-Services are data, not hard-coded buttons. Each has an ID, name, URL, icon, enabled state and order.
+The phone app manager accepts a service name and a full HTTP/HTTPS address. The service appears in the local configuration. BGFT OS can then inspect the service's own website for suitable artwork and cache it locally. If discovery fails, Home renders a clean text card instead of breaking.
 
-For custom services, the artwork subsystem can inspect the website for Open Graph images, Apple touch icons and favicons and cache a usable image locally. If discovery fails, Home falls back to a text tile. Built-in services ship with local fallback artwork so Home never depends on a third-party logo API.
+Service passwords are never stored by BGFT OS. Authentication remains inside the dedicated Chrome profile.
 
 ## Themes
 
-Set `theme` in settings to `auto`, `default`, `halloween`, `thanksgiving` or `christmas`. Auto selects by month. Themes only affect presentation.
+Theme mode supports `auto`, `default`, `halloween`, `thanksgiving` and `christmas`. Auto uses Halloween in October, Thanksgiving in November and Christmas in December. Seasonal themes change the presentation without changing apps or browser data.
 
 ## Power
 
-The target machine supports Modern Standby and has already been verified to wake from a USB keyboard. TVOS can request sleep from the phone remote. The final BOXPUT Power/wake behavior will be tested against the real receiver rather than assumed.
+The original HP supports Modern Standby and has already been verified to wake from a USB keyboard. BGFT OS can request sleep from the phone remote. The BOXPUT receiver's actual wake behavior will be tested when the hardware arrives.
 
-Windows' own plugged-in display/sleep timers are expected to be disabled so TVOS controls the appliance experience. Active streaming should never be interrupted by an aggressive idle timer.
+Windows' plugged-in automatic sleep/display timers are expected to remain disabled so Windows does not interrupt playback.
 
 ## Build
 
-Development requirements are Windows 11, .NET 10 SDK, WebView2 Runtime and Google Chrome.
+Development/build requirements are Windows, .NET 10 and the NuGet WebView2 package. Runtime streaming also requires Chrome and the WebView2 Runtime.
 
 ```powershell
 dotnet restore .\src\TVOS\TVOS.csproj
@@ -87,30 +93,22 @@ dotnet build .\src\TVOS\TVOS.csproj -c Release
 dotnet publish .\src\TVOS\TVOS.csproj -c Release -r win-x64 --self-contained true -o .\publish
 ```
 
-GitHub Actions performs the self-contained publish too.
+Every push to `main` also runs the **Production Build** GitHub Actions workflow. It compiles, publishes a self-contained Windows x64 application, assembles the web/config/assets/scripts, creates `BGFT-OS-win-x64.zip`, and uploads it as a workflow artifact.
 
-## Install on the TV PC
+## Install
 
-After publishing, run:
+After obtaining a published build, the install script places BGFT OS under `C:\TV` and creates a Startup shortcut for the current user.
 
-```powershell
-.\scripts\install.ps1
-```
-
-The installer copies TVOS to `C:\TV` and adds `TVOS.exe` to the current user's Startup folder. It intentionally does not store or configure Windows account credentials. The dedicated `TV` account's automatic sign-in remains a one-time Windows setup step.
-
-Once installed, normal viewers should never need the command line.
+Automatic Windows sign-in is intentionally not configured by the repository because it involves local account credentials. On the original HP, that TV-account auto-login is already configured separately.
 
 ## Privacy
 
-The TV can remain disconnected from the internet. TVOS itself has no tracking SDK, analytics, ads or cloud control service. The phone remote stays local.
+BGFT OS contains no analytics, advertising SDK, cloud account, telemetry service or third-party logo API. The television itself can remain disconnected from the internet.
 
-Streaming providers still receive the normal traffic required to use their websites, and Windows/Chrome have their own privacy settings. TVOS does not pretend to make those services anonymous; it avoids adding another unnecessary data-collection layer.
+Streaming providers still receive the traffic required to use their websites, and Chrome/Windows retain their own privacy behavior. BGFT OS does not claim to make third-party services anonymous.
 
-## What still requires the real hardware
+## Hardware-dependent finishing work
 
-Source code cannot truthfully finalize the BOXPUT HID button map, receiver wake behavior, Onn HDMI/4K/HDR/HDCP settings, IR learning, or the resolution a provider currently chooses to deliver through Windows web playback. Those are isolated so we can test them later without redesigning the application.
+The production software can be built before the final hardware mapping, but several facts can only be established on the actual setup: BOXPUT HID codes, receiver wake behavior, IR learning, final Onn HDMI/4K/HDR/HDCP behavior and the playback resolution each streaming provider actually supplies on Windows.
 
-## Maintenance
-
-Use the password-protected Windows administrator account for Windows/driver maintenance. Everyday viewing belongs in the standard `TV` account. Do not use that account for general web browsing, email or downloads.
+Those items are intentionally isolated from the application design. They can be tuned after installation without rebuilding the product from scratch.

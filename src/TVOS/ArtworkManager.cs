@@ -1,1 +1,58 @@
-using System.Net;using System.Text.RegularExpressions;namespace TVOS;public sealed class ArtworkManager{readonly HttpClient c=new(new HttpClientHandler{AutomaticDecompression=DecompressionMethods.All}){Timeout=TimeSpan.FromSeconds(8)};public ArtworkManager()=>c.DefaultRequestHeaders.UserAgent.ParseAdd("TVOS/1.0");public async Task<string> DiscoverAsync(ServiceConfig s){Directory.CreateDirectory(AppPaths.Cache);if(!Uri.TryCreate(s.Url,UriKind.Absolute,out var page))return"";try{var h=await c.GetStringAsync(page);foreach(var pattern in new[]{@"<meta[^>]+property=[""']og:image[""'][^>]+content=[""']([^""']+)",@"<link[^>]+rel=[""'][^""']*(?:apple-touch-icon|icon)[^""']*[""'][^>]+href=[""']([^""']+)"}){var m=Regex.Match(h,pattern,RegexOptions.IgnoreCase);if(!m.Success||!Uri.TryCreate(page,WebUtility.HtmlDecode(m.Groups[1].Value),out var u))continue;try{var b=await c.GetByteArrayAsync(u);if(b.Length<100||b.Length>5000000)continue;var ext=Path.GetExtension(u.AbsolutePath);if(string.IsNullOrWhiteSpace(ext)||ext.Length>5)ext=".img";var f=Path.Combine(AppPaths.Cache,string.Concat(s.Id.Where(x=>char.IsLetterOrDigit(x)||x=='-'||x=='_'))+ext);await File.WriteAllBytesAsync(f,b);return f;}catch{}}}catch{}return"";}}
+using System.Net;
+using System.Text.RegularExpressions;
+
+namespace TVOS;
+
+public sealed class ArtworkManager
+{
+    private readonly HttpClient client = new(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All })
+    {
+        Timeout = TimeSpan.FromSeconds(10)
+    };
+
+    public ArtworkManager() => client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 BGFT-OS/1.0");
+
+    public async Task<string> DiscoverAsync(ServiceConfig service)
+    {
+        Directory.CreateDirectory(AppPaths.Cache);
+        if (!Uri.TryCreate(service.Url, UriKind.Absolute, out var page)) return "";
+
+        try
+        {
+            var html = await client.GetStringAsync(page);
+            var candidates = new List<string>();
+            AddMatches(candidates, html, @"<meta[^>]+(?:property|name)=[""'](?:og:image|twitter:image)[""'][^>]+content=[""']([^""']+)", 1);
+            AddMatches(candidates, html, @"<link[^>]+rel=[""'][^""']*(?:apple-touch-icon|icon)[^""']*[""'][^>]+href=[""']([^""']+)", 1);
+            candidates.Add(new Uri(page, "/favicon.ico").ToString());
+
+            foreach (var raw in candidates.Distinct())
+            {
+                if (!Uri.TryCreate(page, WebUtility.HtmlDecode(raw), out var uri)) continue;
+                try
+                {
+                    using var response = await client.GetAsync(uri);
+                    if (!response.IsSuccessStatusCode) continue;
+                    var bytes = await response.Content.ReadAsByteArrayAsync();
+                    if (bytes.Length < 100 || bytes.Length > 5_000_000) continue;
+                    var media = response.Content.Headers.ContentType?.MediaType ?? "";
+                    var ext = media switch { "image/png" => ".png", "image/jpeg" => ".jpg", "image/svg+xml" => ".svg", "image/webp" => ".webp", "image/x-icon" or "image/vnd.microsoft.icon" => ".ico", _ => Path.GetExtension(uri.AbsolutePath) };
+                    if (string.IsNullOrWhiteSpace(ext) || ext.Length > 5) ext = ".img";
+                    var file = Path.Combine(AppPaths.Cache, Safe(service.Id) + ext.ToLowerInvariant());
+                    await File.WriteAllBytesAsync(file, bytes);
+                    return file;
+                }
+                catch { }
+            }
+        }
+        catch { }
+        return "";
+    }
+
+    private static void AddMatches(List<string> list, string html, string pattern, int group)
+    {
+        foreach (Match m in Regex.Matches(html, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline))
+            if (m.Success) list.Add(m.Groups[group].Value);
+    }
+
+    private static string Safe(string value) => string.Concat(value.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_'));
+}
