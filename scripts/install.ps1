@@ -16,10 +16,10 @@ $acl=Get-Acl $root;$rule=New-Object Security.AccessControl.FileSystemAccessRule(
 $startup=Join-Path $profile "AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";New-Item -ItemType Directory -Force -Path $startup|Out-Null
 $ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut((Join-Path $startup "BGFTOS.lnk"));$sc.TargetPath="$root\app\BGFTOS.exe";$sc.WorkingDirectory="$root\app";$sc.Save()
 Get-NetFirewallRule -DisplayName "BGFTOS Phone Remote" -ErrorAction SilentlyContinue|Remove-NetFirewallRule -ErrorAction SilentlyContinue
-New-NetFirewallRule -DisplayName "BGFTOS Phone Remote" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8765 -Program "$root\app\BGFTOS.exe" -RemoteAddress LocalSubnet -Profile Any|Out-Null
 if(-not(Test-Path "C:\Program Files\Google\Chrome\Application\chrome.exe")){Write-Warning "Chrome was not found. Install Google Chrome before streaming."}
 $wv=Get-ChildItem "C:\Program Files (x86)\Microsoft\EdgeWebView\Application" -Directory -ErrorAction SilentlyContinue|Select-Object -First 1;if(-not$wv){Write-Warning "WebView2 Runtime was not detected. BGFTOS needs it for Home."}
 Start-Process "$root\app\BGFTOS.exe"
 Write-Host "Installed to C:\TV. BGFTOS will start automatically whenever $userName signs in." -ForegroundColor Green
-Write-Host "Phone remote access is restricted to the local subnet and protected by its generated token."
+Write-Host "Phone remote firewall access is DISABLED by default." -ForegroundColor Yellow
+Write-Host "When this PC is on your trusted home network, run Enable-Phone-Remote.cmd from the BGFTOS package."
 Start-Sleep 4
