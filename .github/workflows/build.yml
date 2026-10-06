@@ -23,6 +23,14 @@ jobs:
           if (-not (Test-Path .\stage\app\BGFTOS.exe)) { throw "BGFTOS.exe was not published." }
           if (-not (Test-Path .\stage\app\Microsoft.Web.WebView2.Core.dll)) { throw "WebView2 assemblies are missing." }
           if ((Get-Item .\stage\app\BGFTOS.exe).Length -lt 10000) { throw "BGFTOS.exe is unexpectedly small." }
+      - name: Validate installer scripts
+        shell: pwsh
+        run: |
+          foreach($script in @(".\scripts\install.ps1",".\scripts\update.ps1",".\scripts\uninstall.ps1")){
+            $tokens=$null;$errors=$null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $script),[ref]$tokens,[ref]$errors)|Out-Null
+            if($errors.Count -gt 0){$errors|ForEach-Object{Write-Error $_.Message};throw "PowerShell syntax validation failed: $script"}
+          }
       - name: Assemble production package
         shell: pwsh
         run: |
@@ -38,11 +46,10 @@ jobs:
       - name: Validate package
         shell: pwsh
         run: |
-          $required=@(".\package\app\BGFTOS.exe",".\package\web\launcher\index.html",".\package\web\remote\index.html",".\package\assets\brand\bigfoot-mark.svg",".\package\config\services.default.json",".\package\config\settings.default.json",".\package\scripts\install.ps1",".\package\Install-BGFTOS.cmd")
+          $required=@(".\package\app\BGFTOS.exe",".\package\web\launcher\index.html",".\package\web\remote\index.html",".\package\web\remote\remote.js",".\package\assets\brand\bigfoot-mark.svg",".\package\config\services.default.json",".\package\config\settings.default.json",".\package\scripts\install.ps1",".\package\Install-BGFTOS.cmd")
           foreach($file in $required){if(-not(Test-Path $file)){throw "Missing production file: $file"}}
-          Compress-Archive -Path .\package\* -DestinationPath .\BGFTOS-win-x64.zip -Force
       - uses: actions/upload-artifact@v4
         with:
           name: BGFTOS-win-x64
-          path: BGFTOS-win-x64.zip
+          path: package
           if-no-files-found: error
