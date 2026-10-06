@@ -1,0 +1,1 @@
+namespace TVOS; internal static class ThemeManager { public static string Resolve(string s)=>!s.Equals("auto",StringComparison.OrdinalIgnoreCase)?s.ToLowerInvariant():DateTime.Now.Month switch{10=>"halloween",11=>"thanksgiving",12=>"christmas",_=>"default"}; }

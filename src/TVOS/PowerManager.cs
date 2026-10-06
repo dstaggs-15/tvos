@@ -1,0 +1,1 @@
+using System.Runtime.InteropServices; namespace TVOS; internal static class PowerManager { [DllImport("powrprof.dll",SetLastError=true)] static extern bool SetSuspendState(bool h,bool f,bool d); public static void Sleep()=>SetSuspendState(false,false,false); }
