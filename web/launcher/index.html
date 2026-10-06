@@ -3,23 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BGFT OS</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05080f">
+<title>BGFTOS</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div><div class="grain"></div>
 <header class="topbar">
-  <button id="brand" class="brand focusable" aria-label="BGFT OS information"><img src="../../assets/brand/bgft-mark.svg" alt=""><span><b>BGFT</b><small>OS</small></span></button>
+  <button id="brand" class="brand focusable" aria-label="BGFTOS information">
+    <img class="bigfoot-mark" src="../../assets/brand/bigfoot-mark.svg" alt="Bigfoot">
+    <span class="brand-name">BGFTOS</span>
+  </button>
   <div class="top-right"><div id="date"></div><div id="clock"></div><button id="settings" class="round focusable" aria-label="Settings">⚙</button></div>
 </header>
 <main>
-  <section class="hero"><p class="eyebrow">WATCH</p><h1>What do you want to watch?</h1><p class="sub">Choose a service and BGFT OS will take it from here.</p></section>
+  <section class="hero"><p class="eyebrow">WATCH</p><h1>What do you want to watch?</h1><p class="sub">Choose a service and BGFTOS will take it from here.</p></section>
   <section id="apps" aria-label="Streaming services"></section>
 </main>
 <div id="toast"></div>
 <div id="panel" class="overlay hidden">
  <div class="panel">
-   <div class="panel-head"><div><p class="eyebrow">BGFT OS</p><h2>System</h2></div><button id="panelClose" class="round focusable">×</button></div>
+   <div class="panel-head"><div><p class="eyebrow">BGFTOS</p><h2>System</h2></div><button id="panelClose" class="round focusable">×</button></div>
    <div class="info-row"><span>Phone remote</span><strong id="remoteUrl">Starting…</strong></div>
    <p class="muted">Open that address on a phone connected to the same home network. The address includes the private pairing token.</p>
    <div class="panel-actions"><button id="sleepButton" class="action focusable">Sleep PC</button><button id="refreshButton" class="action focusable">Refresh Home</button></div>
