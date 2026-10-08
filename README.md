@@ -73,6 +73,12 @@ The phone app manager accepts a service name and a full HTTP/HTTPS address. The 
 
 Service passwords are never stored by BGFT OS. Authentication remains inside the dedicated Chrome profile.
 
+## Local media library
+
+BGFT OS includes a local **Library** for ripped DVDs and other video files. Copy supported video files such as MKV, MP4, M4V, VOB, MPEG/M2TS and similar formats into `C:\\TV\\Media` (including subfolders). The Library rescans that folder when opened and launches the selected file with the Windows-associated player. Media stays local; BGFT OS does not upload the library or require a Plex account.
+
+The media folder is deliberately persistent application data and is not overwritten by normal application updates. A network share can be configured separately at the Windows/network layer when the machine is on the trusted home network; the installer does not expose the folder over the network automatically.
+
 ## Themes
 
 Theme mode supports `auto`, `default`, `halloween`, `thanksgiving` and `christmas`. Auto uses Halloween in October, Thanksgiving in November and Christmas in December. Seasonal themes change the presentation without changing apps or browser data.
