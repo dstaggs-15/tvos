@@ -1,8 +1,35 @@
 let services=[],selected=0,columns=3,panelOpen=false;
 const apps=document.getElementById("apps"),panel=document.getElementById("panel"),toast=document.getElementById("toast");
 const post=o=>window.chrome?.webview?.postMessage(o);
-function iconPath(value){if(!value)return"";if(/^[A-Za-z]:\\/.test(value))return"file:///"+value.replaceAll("\\","/");return"../../"+value}
-function render(){apps.innerHTML="";services.forEach((s,i)=>{const tile=document.createElement("div");tile.className="app"+(i===selected?" selected":"");tile.tabIndex=-1;tile.setAttribute("role","button");tile.setAttribute("aria-label",s.name);const img=document.createElement("img");img.src=iconPath(s.icon);img.alt=s.name;img.onerror=()=>{tile.innerHTML="";const f=document.createElement("div");f.className="fallback";f.textContent=s.name;tile.appendChild(f)};tile.appendChild(img);tile.onclick=()=>{selected=i;render();launch()};apps.appendChild(tile)})}
+
+function iconPath(value,id){
+  const v=(value||"").trim();
+  if(!v)return id?`https://bgftos.local/assets/services/${encodeURIComponent(id)}.svg`:"";
+  if(/^https?:\/\//i.test(v))return v;
+  if(/^[A-Za-z]:\\/.test(v)){
+    const normalized=v.replaceAll("\\","/");
+    const root="C:/TV/";
+    if(normalized.toLowerCase().startsWith(root.toLowerCase()))
+      return "https://bgftos.local/"+normalized.slice(root.length).split("/").map(encodeURIComponent).join("/");
+    return "file:///"+normalized;
+  }
+  return "https://bgftos.local/"+v.replace(/^\.\.\//g,"").replace(/^\.\//,"").replace(/^\//,"").split("/").map(encodeURIComponent).join("/");
+}
+
+function render(){
+  apps.innerHTML="";
+  services.forEach((s,i)=>{
+    const tile=document.createElement("div");
+    tile.className="app"+(i===selected?" selected":"");
+    tile.tabIndex=-1;tile.setAttribute("role","button");tile.setAttribute("aria-label",s.name);
+    const img=document.createElement("img");
+    img.src=iconPath(s.icon,s.id);img.alt=s.name;
+    img.onerror=()=>{tile.innerHTML="";const f=document.createElement("div");f.className="fallback";f.textContent=s.name;tile.appendChild(f)};
+    tile.appendChild(img);
+    tile.onclick=()=>{selected=i;render();launch()};
+    apps.appendChild(tile);
+  });
+}
 function launch(){const s=services[selected];if(s)post({action:"launch",url:s.url})}
 function openPanel(){panelOpen=true;panel.classList.remove("hidden");post({action:"remoteInfo"});document.getElementById("panelClose").focus()}
 function closePanel(){panelOpen=false;panel.classList.add("hidden")}
