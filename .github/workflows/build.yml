@@ -48,6 +48,14 @@ jobs:
         run: |
           $required=@(".\package\app\BGFTOS.exe",".\package\web\launcher\index.html",".\package\web\remote\index.html",".\package\web\remote\remote.js",".\package\assets\brand\bigfoot-mark.svg",".\package\config\services.default.json",".\package\config\settings.default.json",".\package\scripts\install.ps1",".\package\Install-BGFTOS.cmd")
           foreach($file in $required){if(-not(Test-Path $file)){throw "Missing production file: $file"}}
+          $services=Get-Content .\package\config\services.default.json -Raw | ConvertFrom-Json
+          foreach($service in $services.services){
+            if([string]::IsNullOrWhiteSpace($service.icon)){throw "Built-in service has blank artwork path: $($service.id)"}
+            $asset=Join-Path ".\package" ($service.icon -replace '/','\')
+            if(-not(Test-Path $asset)){throw "Built-in service artwork is missing: $asset"}
+          }
+          $launcher=Get-Content .\package\web\launcher\app.js -Raw
+          if($launcher -notmatch 'bgftos\.local'){throw "Launcher is not configured for the WebView2 asset virtual host."}
       - uses: actions/upload-artifact@v4
         with:
           name: BGFTOS-win-x64
