@@ -9,5 +9,6 @@ internal static class AppPaths {
  public static string Cache=>Path.Combine(Root,"cache","artwork");
  public static string WebView=>Path.Combine(Root,"cache","webview");
  public static string Logs=>Path.Combine(Root,"logs");
+ public static string Media=>Path.Combine(Root,"Media");
  static string Find(){var d=new DirectoryInfo(AppContext.BaseDirectory);while(d!=null){if(Directory.Exists(Path.Combine(d.FullName,"web"))&&Directory.Exists(Path.Combine(d.FullName,"config")))return d.FullName;d=d.Parent;}return AppContext.BaseDirectory;}
 }
