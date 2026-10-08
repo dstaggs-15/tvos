@@ -8,7 +8,7 @@ $userName=$consoleUser.Split("\")[-1];$sid=(New-Object Security.Principal.NTAcco
 $profile=(Get-CimInstance Win32_UserProfile|Where-Object SID -eq $sid|Select-Object -First 1).LocalPath;if(!$profile){throw "Could not find the Windows profile for $consoleUser."}
 $root="C:\TV";Write-Host "Installing BGFTOS for $consoleUser..." -ForegroundColor Cyan
 Stop-Process -Name BGFTOS -Force -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force -Path "$root\app","$root\web","$root\assets","$root\config","$root\cache\artwork","$root\cache\webview","$root\logs"|Out-Null
+New-Item -ItemType Directory -Force -Path "$root\app","$root\web","$root\assets","$root\config","$root\cache\artwork","$root\cache\webview","$root\logs","$root\Media"|Out-Null
 Copy-Item "$appSource\*" "$root\app" -Recurse -Force;Copy-Item "$packageRoot\web\*" "$root\web" -Recurse -Force;Copy-Item "$packageRoot\assets\*" "$root\assets" -Recurse -Force;Copy-Item "$packageRoot\config\*.default.json" "$root\config" -Force
 if(-not(Test-Path "$root\config\services.json")){Copy-Item "$root\config\services.default.json" "$root\config\services.json"}
 if(-not(Test-Path "$root\config\settings.json")){Copy-Item "$root\config\settings.default.json" "$root\config\settings.json"}
